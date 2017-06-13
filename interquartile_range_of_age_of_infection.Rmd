@@ -14,7 +14,7 @@ devtools::install_github("ropenscilabs/arresteddev")
 library("arresteddev")
 
 #project set up
-setwd("~/Desktop/UGA_REU/lab_work")
+setwd("~/Desktop/UGA_REU/lab_work/reproducible_data")
 data = read.csv('spm.data.long.csv', na.strings = c('', 'NA'), header = TRUE, sep = ',')
 data_age = subset(data, !(is.na(data$AGE)))
 data_age_confirmed = subset(data_age, (data_age$CONCLUSION=="CONFIRMED" | data_age$CONCLUSION=="CLINICAL"))
@@ -28,47 +28,109 @@ yr<- as.integer(substr(data_onset, 1, 4))
 
 Box-Whisker diagrams were created for each county to graphically examine the interquartile range of age of infection for each county. This will allow for eventual comparison of interquartile ranges among counties. 
 
-
 ```{r Interquartile range of aoi within counties, echo=TRUE}
 #list of each county
 county_vec <- as.character(unique(data$COUNTY))
 
-#create blank IQR matrix
-IQR_matrix <- matrix(rep(NA, length(county_vec)), nrow = 1, ncol = length(county_vec))
-colnames(IQR_matrix) <- county_vec
+#create blank lower quartile matrix
+lowerq_matrix <- matrix(rep(NA, length(county_vec) * 12), nrow = 12, ncol = length(county_vec))
+colnames(lowerq_matrix) <- county_vec
+months <- c("January", "Febuary", "March", 
+            "April", "May", "June",
+            "July", "August", "September",
+            "October", "November", "December")
+row.names(lowerq_matrix) <- months
 
-#find IQR for each county 
-for(i in 1:length(county_vec)){
-  which.county_i <- which(data$COUNTY == county_vec[i])
-  age_i <- data$AGE[which.county_i]
-  IQR_matrix[i] <- IQR(age_i)
+#find lower quartile for each county in each month
+for(i in 1:12){
+  x <- subset(data, data$MONTH == i)
+  for(j in 1:387){
+    which.county_j <- which(x$COUNTY == county_vec[j])
+    county_j_ages <- x$AGE[which.county_j]
+    lowerq_matrix[i,j] <- quantile(county_j_ages)[2]
+  }
 }
 
-#I don't like the way that this displays but it won't allow me to use View()
-#print(IQR_matrix)
+#create blank upper quartile matrix
+upperq_matrix <- matrix(rep(NA, length(county_vec) * 12), nrow = 12, ncol = length(county_vec))
+colnames(upperq_matrix) <- county_vec
+months <- c("January", "Febuary", "March", 
+            "April", "May", "June",
+            "July", "August", "September",
+            "October", "November", "December")
+row.names(upperq_matrix) <- months
+
+#find upper quartile for each county in each month
+for(i in 1:12){
+  x <- subset(data, data$MONTH == i)
+  for(j in 1:387){
+    which.county_j <- which(x$COUNTY == county_vec[j])
+    county_j_ages <- x$AGE[which.county_j]
+    upperq_matrix[i,j] <- quantile(county_j_ages)[4]
+  }
+}
+
+#IQR matrix
+IQR_matrix <- matrix(rep(NA, length(county_vec) * 12), nrow = 12, ncol = length(county_vec))
+colnames(IQR_matrix) <- county_vec
+months <- c("January", "Febuary", "March", 
+            "April", "May", "June",
+            "July", "August", "September",
+            "October", "November", "December")
+row.names(IQR_matrix) <- months
+
+#find lower quartile for each county in each month
+for(i in 1:12){
+  x <- subset(data, data$MONTH == i)
+  for(j in 1:387){
+    which.county_j <- which(x$COUNTY == county_vec[j])
+    county_j_ages <- x$AGE[which.county_j]
+    IQR_matrix[i,j] <- IQR(county_j_ages)
+  }
+}
 
 #box-whisker plots for each county
-for(i in 1:length(county_vec)){
-  data_i <- subset(data, data$COUNTY == county_vec[i])
+#for(i in 1:length(county_vec)){
+  #data_i <- subset(data, data$COUNTY == county_vec[i])
   #par(mfrow = c(3, 3), pty = "s"), want to do a 3 x 3 with nine plots on one page
-  boxplot(data_i$AGE, data = data_i) 
+ # boxplot(data_i$AGE, data = data_i) 
   #add a legend argument which displays sample size (n) for each county: 
   # data$COUNTY == length(county_vec[i])
-}
+#}
 
 ```
 
 ### Preliminary Findings
 
-* Maximum interquartile range: `r county_vec[217]`--- `r IQR_matrix[217]`
-* Minimum interquartile range: `r county_vec[40]`--- `r IQR_matrix[40]`
+* The minimum interquartile range was zero, but this would just correspond to one case within a month in a county.
+* The maximum interquartile range was `r max(IQR_matrix, na.rm = TRUE)`.
+* The average lower quartile was `r mean(lowerq_matrix, na.rm = TRUE)`.
+    + Standard deviation was `r sd(lowerq_matrix, na.rm = TRUE)`. 
+* The average upper quartile was `r mean(upperq_matrix, na.rm = TRUE)`.
+    + Standard deviation was `r sd(upperq_matrix, na.rm = TRUE)`. 
+    
+Considering doing an ANOVA between counties for both the upper and lower quantiles per month between counties in order to see between which counties they significantly differ. 
 
-## Including Plots
+**Having trouble creating a useful/ efficient boxplot visualization.** There are 387 counties, so I believe that I need to parse down the number of counties that I am making boxplots for. In essence, it makes no sense to make boxplots for counties with only one case. It also doesn't appear to be useful to create boxplots for counties with 5 cases, because the minimum, lower quartile, mean, upper quartile, and maximum would inherently account for all 5 cases, rather than truly representing the data. 
 
-You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+## Number of cases within counties 
+
+While one could probably be assured that all of the cases within the Sao Paulo region are related as the number of measles cases during this period far exceeded what was expected, **is there a minimum number of cases at a county-level needed to be considered an outbreak?**
+
+```{r Number of cases needed to be an outbreak}
+#lengths of county-level data
+length_mat <- matrix(rep(NA, length(county_vec)), nrow = 1)
+colnames(length_mat) <- county_vec
+
+for(i in 1:length(1:387)){
+  length_mat[i] <- length(which(data$COUNTY == county_vec[i]))
+}
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+### Preliminary Findings
+
+* Number of counties with more than one case: `r length(which(length_mat != 1))`
+* Number of counties with more than five cases:  `r length(which(length_mat > 5))`
+* Number of counties with more than twenty cases: `r length(which(length_mat > 20))`
