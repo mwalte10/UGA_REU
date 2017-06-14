@@ -26,7 +26,7 @@ yr<- as.integer(substr(data_onset, 1, 4))
 
 ## Interquartile Range of Age of Infection within Counties
 
-Box-Whisker diagrams were created for each county to graphically examine the interquartile range of age of infection for each county. This will allow for eventual comparison of interquartile ranges among counties. 
+Box-whisker diagrams were created for each county to graphically examine the interquartile range of age of infection for each county. This will allow for eventual comparison of interquartile ranges among counties. 
 
 ```{r Interquartile range of aoi within counties, echo=TRUE}
 #list of each county
@@ -79,7 +79,7 @@ months <- c("January", "Febuary", "March",
             "October", "November", "December")
 row.names(IQR_matrix) <- months
 
-#find lower quartile for each county in each month
+#find IQR for each county in each month
 for(i in 1:12){
   x <- subset(data, data$MONTH == i)
   for(j in 1:387){
@@ -89,14 +89,10 @@ for(i in 1:12){
   }
 }
 
-#box-whisker plots for each county
-#for(i in 1:length(county_vec)){
-  #data_i <- subset(data, data$COUNTY == county_vec[i])
-  #par(mfrow = c(3, 3), pty = "s"), want to do a 3 x 3 with nine plots on one page
- # boxplot(data_i$AGE, data = data_i) 
-  #add a legend argument which displays sample size (n) for each county: 
-  # data$COUNTY == length(county_vec[i])
-#}
+#box and whisker plot for whole dataset by month
+boxplot(data$AGE~data$MONTH, data = data, xlab="Month", 
+        ylab="Age", main="Sao Paulo State", las=1)
+
 
 ```
 
@@ -113,6 +109,10 @@ Considering doing an ANOVA between counties for both the upper and lower quantil
 
 **Having trouble creating a useful/ efficient boxplot visualization.** There are 387 counties, so I believe that I need to parse down the number of counties that I am making boxplots for. In essence, it makes no sense to make boxplots for counties with only one case. It also doesn't appear to be useful to create boxplots for counties with 5 cases, because the minimum, lower quartile, mean, upper quartile, and maximum would inherently account for all 5 cases, rather than truly representing the data. 
 
+Re: the box-whisker plots--- the markdown file that Annakate gave me has them for each week of the epidemic (*rather than for each month*) for
+
+* The whole of the Sao Paulo state (i.e. all of the cases in the dataset)
+* All of the cases that occurred in the Sao Paulo county (~22,000 cases)
 
 ## Number of cases within counties 
 
@@ -134,3 +134,89 @@ for(i in 1:length(1:387)){
 * Number of counties with more than one case: `r length(which(length_mat != 1))`
 * Number of counties with more than five cases:  `r length(which(length_mat > 5))`
 * Number of counties with more than twenty cases: `r length(which(length_mat > 20))`
+
+```{r Counties with greater than 20 cases, echo=TRUE, fig.width=5, fig.height=5,fig.show="hold"}
+#create dataframe for counties with >20 cases
+#as.data.frame(length_mat)
+which.big_counties <- which(length_mat > 20)
+big_counties_vec <- county_vec[which.big_counties]
+
+
+#for(i in 1:length(big_counties_vec)){
+  #x <- subset(data, data$COUNTY == big_counties_vec[i])
+  #boxplot(x$AGE ~ x$MONTH, data = x, main = big_counties_vec[i])
+  #legend("topright", legend = length_mat[which.big_counties[i]])
+#}
+
+
+```
+
+## ANOVA using county and month as factors
+```{r IQR examination for counties >20}
+IQR_matrix_new <- matrix(rep(NA, length(big_counties_vec) * 12), 
+                         nrow = 12, ncol = length(big_counties_vec))
+colnames(IQR_matrix_new) <- big_counties_vec
+months <- c("January", "Febuary", "March", 
+            "April", "May", "June",
+            "July", "August", "September",
+            "October", "November", "December")
+row.names(IQR_matrix_new) <- months
+
+#find IQR for each county >20 in each month
+for(i in 1:12){
+  x <- subset(data, data$MONTH == i)
+  for(j in 1:length(big_counties_vec)){
+    y <- subset(x, x$COUNTY == big_counties_vec[j])
+    IQR_matrix_new[i,j] <- IQR(y$AGE)
+  }
+}
+
+#ANOVA matrix
+anova_mat <- matrix(data = NA, nrow = 83 * 12, ncol = 3)
+colnames(anova_mat) <- c("IQR", "COUNTY", "MONTH")
+#fill IQR
+for(i in 1:83 * 12){
+  anova_mat[,1] <- IQR_matrix_new[,]
+}
+#fill months
+anova_mat[,3] <- rep(seq(1,12), length(big_counties_vec))
+#fill counties
+anova_mat[seq(1,12),2] <- rep(big_counties_vec[1], 12)
+for(i in 1:83){
+  x <- 12 * (i-1)
+  anova_mat[x + seq(1,12),2] <- rep(big_counties_vec[i], 12)
+}
+
+anova_mat <- as.data.frame(anova_mat)
+anova_mat <- subset(anova_mat, !is.na(anova_mat$IQR))
+anova_mat$MONTH <- factor(anova_mat$MONTH)
+anova_mat$IQR <- as.numeric(as.character(anova_mat$IQR))
+
+#remove "-" because it's confusing R
+which(anova_mat$COUNTY == "EMBU-GUACU")
+anova_mat[296,2] <- "EMBU GUACU"
+anova_mat[297,2] <- "EMBU GUACU"
+anova_mat[298,2] <- "EMBU GUACU"
+anova_mat[299,2] <- "EMBU GUACU"
+
+
+#one way between county and IQR, p = 0.00513
+anova_IQR_county <- aov(IQR ~ COUNTY, data = anova_mat)
+
+#one way between county and IQR, p = <2 e -16
+anova_IQR_month <- aov(IQR ~ MONTH, data = anova_mat)
+
+
+```
+### Preliminary Findings
+
+* There are `r length(big_counties_vec)` counties with more than 20 cases.
+* The null hypothesis that county and IQR are unrelated can be rejected with p = 0.00513.
+* The null hypothesis that month and IQR are unrelated can be rejected with p = <2e-16.
+
+**TO DO:**
+
+* Run a two-way ANOVA using MONTH and COUNTY.
+* Run *a posteri* multiple comparisons test. 
+
+ 
