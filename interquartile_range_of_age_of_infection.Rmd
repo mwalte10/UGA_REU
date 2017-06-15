@@ -1,8 +1,10 @@
 ---
 title: "Interquartile Range of Age of Infection"
 author: "Maggie Walters"
-date: "June 13, 2017"
-output: html_document
+date: "June 14, 2017"
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -14,7 +16,7 @@ devtools::install_github("ropenscilabs/arresteddev")
 library("arresteddev")
 
 #project set up
-setwd("~/Desktop/UGA_REU/lab_work/reproducible_data")
+setwd("~/Desktop/UGA_REU/lab_work/")
 data = read.csv('spm.data.long.csv', na.strings = c('', 'NA'), header = TRUE, sep = ',')
 data_age = subset(data, !(is.na(data$AGE)))
 data_age_confirmed = subset(data_age, (data_age$CONCLUSION=="CONFIRMED" | data_age$CONCLUSION=="CLINICAL"))
@@ -135,24 +137,24 @@ for(i in 1:length(1:387)){
 * Number of counties with more than five cases:  `r length(which(length_mat > 5))`
 * Number of counties with more than twenty cases: `r length(which(length_mat > 20))`
 
-```{r Counties with greater than 20 cases, echo=TRUE, fig.width=5, fig.height=5,fig.show="hold"}
-#create dataframe for counties with >20 cases
+```{r Counties with greater than 50 cases, echo=TRUE, fig.width=5, fig.height=5,fig.show="hold"}
+#create dataframe for counties with >50 cases
 #as.data.frame(length_mat)
-which.big_counties <- which(length_mat > 20)
+which.big_counties <- which(length_mat > 50)
 big_counties_vec <- county_vec[which.big_counties]
 
 
-#for(i in 1:length(big_counties_vec)){
-  #x <- subset(data, data$COUNTY == big_counties_vec[i])
-  #boxplot(x$AGE ~ x$MONTH, data = x, main = big_counties_vec[i])
-  #legend("topright", legend = length_mat[which.big_counties[i]])
-#}
+for(i in 1:length(big_counties_vec)){
+  x <- subset(data, data$COUNTY == big_counties_vec[i])
+  boxplot(x$AGE ~ x$MONTH, data = x, main = big_counties_vec[i])
+  legend("topright", legend = length_mat[which.big_counties[i]])
+}
 
 
 ```
 
 ## ANOVA using county and month as factors
-```{r IQR examination for counties >20}
+```{r IQR examination for counties >50}
 IQR_matrix_new <- matrix(rep(NA, length(big_counties_vec) * 12), 
                          nrow = 12, ncol = length(big_counties_vec))
 colnames(IQR_matrix_new) <- big_counties_vec
@@ -172,17 +174,17 @@ for(i in 1:12){
 }
 
 #ANOVA matrix
-anova_mat <- matrix(data = NA, nrow = 83 * 12, ncol = 3)
+anova_mat <- matrix(data = NA, nrow = 49 * 12, ncol = 3)
 colnames(anova_mat) <- c("IQR", "COUNTY", "MONTH")
 #fill IQR
-for(i in 1:83 * 12){
+for(i in 1:49 * 12){
   anova_mat[,1] <- IQR_matrix_new[,]
 }
 #fill months
 anova_mat[,3] <- rep(seq(1,12), length(big_counties_vec))
 #fill counties
 anova_mat[seq(1,12),2] <- rep(big_counties_vec[1], 12)
-for(i in 1:83){
+for(i in 1:49){
   x <- 12 * (i-1)
   anova_mat[x + seq(1,12),2] <- rep(big_counties_vec[i], 12)
 }
@@ -190,22 +192,40 @@ for(i in 1:83){
 anova_mat <- as.data.frame(anova_mat)
 anova_mat <- subset(anova_mat, !is.na(anova_mat$IQR))
 anova_mat$MONTH <- factor(anova_mat$MONTH)
+anova_mat$COUNTY <- as.character(anova_mat$COUNTY)
 anova_mat$IQR <- as.numeric(as.character(anova_mat$IQR))
 
 #remove "-" because it's confusing R
 which(anova_mat$COUNTY == "EMBU-GUACU")
-anova_mat[296,2] <- "EMBU GUACU"
-anova_mat[297,2] <- "EMBU GUACU"
-anova_mat[298,2] <- "EMBU GUACU"
-anova_mat[299,2] <- "EMBU GUACU"
+anova_mat[180,2] <- "EMBU GUACU"
+anova_mat[181,2] <- "EMBU GUACU"
+anova_mat[182,2] <- "EMBU GUACU"
+anova_mat[183,2] <- "EMBU GUACU"
+anova_mat$COUNTY <- factor(anova_mat$COUNTY)
 
-
-#one way between county and IQR, p = 0.00513
+#one way between month and IQR, p = 0.0203
 anova_IQR_county <- aov(IQR ~ COUNTY, data = anova_mat)
+#p = 5.896e-5
+shapiro.test((resid(anova_IQR_county)))
+plot(anova_IQR_county, which = c(1,2))
+hist(resid(anova_IQR_county))
+
+##TRANSFORMATION
+IQR_x <- 1 / (anova_mat$IQR + 1)
+x_mat <- aov(IQR_x ~ COUNTY, data = anova_mat)
+shapiro.test((resid(x_mat)))
+hist(resid(x_mat))
 
 #one way between county and IQR, p = <2 e -16
 anova_IQR_month <- aov(IQR ~ MONTH, data = anova_mat)
+#p = 0.0006897
+shapiro.test((resid(anova_IQR_month)))
+plot(anova_IQR_month, which = c(1,2))
+hist(resid(anova_IQR_month))
 
+
+#two way with county and IQR, not displaying p value
+anova_two_way <- aov(IQR ~ COUNTY + MONTH + COUNTY:MONTH, data = anova_mat)
 
 ```
 ### Preliminary Findings
@@ -216,7 +236,147 @@ anova_IQR_month <- aov(IQR ~ MONTH, data = anova_mat)
 
 **TO DO:**
 
+* Either attain normality or complete the non-parametric equivalent of a one-way ANOVA (Kruskal-Wallis)
 * Run a two-way ANOVA using MONTH and COUNTY.
+    + There is a degrees of freedom issue with the two way anova. There are too many factor levels for the number of observations (634). In order to lower the number of levels I would need to increase the number of cases to be considered from 20 to maybe 30?
+    + Would need to do counties with greater than 50 cases (which would amount to 49 cases)
+        + Unfortunately, this also reduces the number of observations to 401 (while df is 600)
 * Run *a posteri* multiple comparisons test. 
 
+##Differences in 75% percentile 
+```{r 75% differences}
+upper_matrix_new <- matrix(rep(NA, length(big_counties_vec) * 12), 
+                         nrow = 12, ncol = length(big_counties_vec))
+colnames(upper_matrix_new) <- big_counties_vec
+months <- c("January", "Febuary", "March", 
+            "April", "May", "June",
+            "July", "August", "September",
+            "October", "November", "December")
+row.names(upper_matrix_new) <- months
+
+for(i in 1:12){
+  x <- subset(data, data$MONTH == i)
+  for(j in 1:length(big_counties_vec)){
+    which.county_j <- which(x$COUNTY == big_counties_vec[j])
+    county_j_ages <- x$AGE[which.county_j]
+    upper_matrix_new[i,j] <- quantile(county_j_ages)[4]
+  }
+}
+
+upper_matrix <- matrix(rep(NA, 3 * 12*length(big_counties_vec)), ncol = 3)
+colnames(upper_matrix) <- c("UPPER", "COUNTY", "MONTH")
+
+#fill in upper
+for(i in 1:12 * length(big_counties_vec)){
+  upper_matrix[,1] <- upper_matrix_new[,]
+}
+
+#fill in months
+upper_matrix[,3] <- rep(seq(1:12), length(big_counties_vec))
+
+#fill in counties
+upper_matrix[seq(1,12),2] <- rep(big_counties_vec[1], 12)
+for(i in 1:49){
+  x <- 12 * (i-1)
+  upper_matrix[x + seq(1,12),2] <- rep(big_counties_vec[i], 12)
+}
+
+#convert to data frame
+upper_matrix <- as.data.frame(upper_matrix)
+
+#remove NAs
+upper_matrix <- subset(upper_matrix, !is.na(UPPER))
+
+#change upper from factor to number
+upper_matrix$UPPER <- as.numeric(upper_matrix$UPPER)
+
+#create ANOVA-county model and assess for normality
+upper_anova_c <- aov(UPPER ~ COUNTY, data = upper_matrix)
+#p = 0.0006119
+shapiro.test((resid(upper_anova_c)))
+plot(upper_anova_c, which = c(1,2))
+hist(resid(upper_anova_c))
+
+#create ANOVA-month model and assess for normality
+upper_anova_m <- aov(UPPER ~ MONTH, data = upper_matrix)
+#p = 0.0006119
+shapiro.test((resid(upper_anova_m)))
+plot(upper_anova_m, which = c(1,2))
+hist(resid(upper_anova_m))
+
+```
+### Preliminary Findings
+
+The upper quartile values were not normal, so it is necessary to either try to find a transformation or consider a non-parametric test (such as the Kruskall-Wallis test).
+
+**Also to be considered are other ways to compare age distributions.**
+
+```{r 25% differences}
+lower_matrix_new <- matrix(rep(NA, length(big_counties_vec) * 12), 
+                         nrow = 12, ncol = length(big_counties_vec))
+colnames(lower_matrix_new) <- big_counties_vec
+months <- c("January", "Febuary", "March", 
+            "April", "May", "June",
+            "July", "August", "September",
+            "October", "November", "December")
+row.names(lower_matrix_new) <- months
+
+for(i in 1:12){
+  x <- subset(data, data$MONTH == i)
+  for(j in 1:length(big_counties_vec)){
+    which.county_j <- which(x$COUNTY == big_counties_vec[j])
+    county_j_ages <- x$AGE[which.county_j]
+    lower_matrix_new[i,j] <- quantile(county_j_ages)[2]
+  }
+}
+
+lower_matrix <- matrix(rep(NA, 3 * 12*length(big_counties_vec)), ncol = 3)
+colnames(lower_matrix) <- c("LOWER", "COUNTY", "MONTH")
+
+#fill in lower
+for(i in 1:12 * length(big_counties_vec)){
+  lower_matrix[,1] <- lower_matrix_new[,]
+}
+
+#fill in months
+lower_matrix[,3] <- rep(seq(1:12), length(big_counties_vec))
+
+#fill in counties
+lower_matrix[seq(1,12),2] <- rep(big_counties_vec[1], 12)
+for(i in 1:49){
+  x <- 12 * (i-1)
+  lower_matrix[x + seq(1,12),2] <- rep(big_counties_vec[i], 12)
+}
+
+#convert to data frame
+lower_matrix <- as.data.frame(lower_matrix)
+
+#remove NAs
+lower_matrix <- subset(lower_matrix, !is.na(LOWER))
+
+#change upper from factor to number
+lower_matrix$LOWER <- as.numeric(lower_matrix$LOWER)
+
+#create ANOVA-county model and assess for normality
+lower_anova_c <- aov(LOWER ~ COUNTY, data = lower_matrix)
+#p = 9.823-11
+shapiro.test((resid(lower_anova_c)))
+plot(lower_anova_c, which = c(1,2))
+hist(resid(lower_anova_c))
+
+##TRANSFORMATION
+lower_x <- (lower_matrix$LOWER)^2
+x_mod <- aov(lower_x ~ COUNTY, data = lower_matrix)
+shapiro.test((resid(x_mod)))
+hist(resid(x_mod))
+
+#create ANOVA-month model and assess for normality
+lower_anova_m <- aov(LOWER ~ MONTH, data = lower_matrix)
+#p = 7.309e-13
+shapiro.test((resid(lower_anova_m)))
+plot(lower_anova_m, which = c(1,2))
+hist(resid(lower_anova_m))
+```
+### Preliminary Findings
  
+Lower quartiles were found to not be normally distributed so a transformation needs to be found or a non-parametric test needs to be considered. 
