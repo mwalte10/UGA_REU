@@ -1,0 +1,151 @@
+---
+title: "Descriptive statistics by urban/rural area"
+author: "Maggie Walters"
+date: "June 16, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+rm(list = ls())
+
+knitr::opts_chunk$set(echo = TRUE)
+options(repos=structure(c(CRAN="YOUR FAVORITE MIRROR")))
+install.packages("devtools")
+devtools::install_github("ropenscilabs/arresteddev")
+library("arresteddev")
+
+#project set up
+setwd("~/Desktop/UGA_REU/lab_work/")
+data = read.csv('spm.data.long.csv', na.strings = c('', 'NA'), header = TRUE, sep = ',')
+data_age = subset(data, !(is.na(data$AGE)))
+data_age_confirmed = subset(data_age, (data_age$CONCLUSION=="CONFIRMED" | data_age$CONCLUSION=="CLINICAL"))
+data = subset(data_age_confirmed, !(is.na(data_age_confirmed$ONSET)))
+data_onset <- as.Date(data$ONSET, "%m/%d/%Y")
+mnth <- as.integer(substr(data_onset, 6, 7))
+yr<- as.integer(substr(data_onset, 1, 4))
+```
+
+## Divide counties by RMSP
+
+```{r Split between 0 and 1 for RMSP}
+#list of each county
+county_vec <- as.character(unique(data$COUNTY))
+
+#are not in regional metropolitan area
+rural <- subset(data, data$RMSP == 0)
+
+#are in the regional metropolitan area
+urban <- subset(data, data$RMSP == 1)
+
+```
+
+## Find upper quartile for rural
+
+```{r pressure, echo=FALSE}
+length.rural <- dim(rural)[1]
+unique.rural <- unique(rural$COUNTY)
+
+####################################
+#create upper matrix
+####################################
+#create blank upper quartile matrix
+upper.rural.mat <- matrix(rep(NA, length(unique.rural) * 12), nrow = 12, ncol = length(unique.rural))
+colnames(upper.rural.mat) <- unique.rural
+months <- c("January", "Febuary", "March", 
+            "April", "May", "June",
+            "July", "August", "September",
+            "October", "November", "December")
+row.names(upper.rural.mat) <- months
+
+#find upper quartile for each county in each month
+for(i in 1:12){
+  x <- subset(rural, rural$MONTH == i)
+  for(j in 1:length(unique.rural)){
+    which.county_j <- which(x$COUNTY == unique.rural[j])
+    county_j_ages <- x$AGE[which.county_j]
+    upper.rural.mat[i,j] <- quantile(county_j_ages)[4]
+  }
+}
+
+####################################
+#create blank upper quartile matrix
+####################################
+#create matrix
+upper_rural <- matrix(rep(NA, length(unique.rural) * 3), nrow = length(unique.rural) * 12, ncol = 3)
+colnames(upper_rural) <- c("UPPER", "COUNTY", "MONTH")
+#fill in month
+upper_rural[,3] <- rep(seq(1:12), length(unique.rural))
+#fill in upper quartile
+for(i in 1:12 * 348){
+  upper_rural[,1] <- upper.rural.mat[,]
+}
+#fill in counties
+unique.rural <- as.character(unique.rural)
+upper_rural[1:12,2] <- rep(unique.rural[1], 12)
+for(i in 1:length(unique.rural)){
+  x <- 12 * (i-1)
+  upper_rural[x + seq(1,12),2] <- rep(unique.rural[i], 12)
+}
+#remove all NAs
+upper_rural <- as.data.frame(upper_rural)
+upper_rural <- subset(upper_rural, !is.na(upper_rural$UPPER))
+```
+
+## Run ANOVA for county/month: UPPER 
+
+```{r ANOVA for upper and county/month}
+upper_rural$UPPER <- as.numeric(upper_rural$UPPER)
+
+####################################
+#COUNTY
+####################################
+#p = 0.0322
+upper_county_aov <- aov(UPPER ~ COUNTY, data = upper_rural)
+#p = 6.897e-10, not normal
+shapiro.test((resid(upper_county_aov)))
+plot(upper_county_aov, which = c(1,2))
+hist(resid(upper_county_aov))
+
+#########################
+#COUNTY: NON-PARAMETRIC
+#########################
+#KW-test: p = 0.0747
+upper_county_kw <- kruskal.test(UPPER ~ COUNTY, data = upper_rural)
+
+
+
+
+####################################
+#MONTH
+####################################
+#p = 0.0555
+upper_month_aov <- aov(UPPER ~ MONTH, data = upper_rural)
+#p = 2.242e-14, not normal
+shapiro.test((resid(upper_month_aov)))
+plot(upper_month_aov, which = c(1,2))
+hist(resid(upper_month_aov))
+
+#########################
+#MONTH: NON-PARAMETRIC
+#########################
+#KW-test: p = 0.07786
+upper_month_kw <- kruskal.test(UPPER ~ MONTH, data = upper_rural)
+
+
+
+
+####################################
+#TWO-WAY
+####################################
+#p = 0.0322
+upper_twoway_aov <- aov(UPPER ~ COUNTY * MONTH, data = upper_rural)
+#p = 6.897e-10, not normal
+shapiro.test((resid(upper_county_aov)))
+plot(upper_county_aov, which = c(1,2))
+hist(resid(upper_county_aov))
+
+```
+### Preliminary results
+
+* Tried many transformations, but could not normalize data. Attempted a KW test for month and county. 
+* Just realized that I should do a ANOVA with upper quartile and then the factor being RMSP. Need to use all data. 
