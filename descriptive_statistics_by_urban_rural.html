@@ -124,6 +124,1260 @@ $(document).ready(function () {
 </div>
 
 
+<div id="anova-with-rmsp-as-a-factor" class="section level2">
+<h2>ANOVA with RMSP as a factor</h2>
+<pre class="r"><code>#list of each county
+county_vec &lt;- as.character(unique(data$COUNTY))
+#create blank upper quartile matrix
+upperq_matrix &lt;- matrix(rep(NA, length(county_vec) * 12), nrow = 12, ncol = length(county_vec))
+colnames(upperq_matrix) &lt;- county_vec
+months &lt;- c(&quot;January&quot;, &quot;Febuary&quot;, &quot;March&quot;, 
+            &quot;April&quot;, &quot;May&quot;, &quot;June&quot;,
+            &quot;July&quot;, &quot;August&quot;, &quot;September&quot;,
+            &quot;October&quot;, &quot;November&quot;, &quot;December&quot;)
+row.names(upperq_matrix) &lt;- months
+
+#find upper quartile for each county in each month
+for(i in 1:12){
+  x &lt;- subset(data, data$MONTH == i)
+  for(j in 1:387){
+    which.county_j &lt;- which(x$COUNTY == county_vec[j])
+    county_j_ages &lt;- x$AGE[which.county_j]
+    upperq_matrix[i,j] &lt;- quantile(county_j_ages)[4]
+  }
+}
+upper_matrix &lt;- matrix(rep(NA, 4 * 12*length(county_vec)), ncol = 4)
+colnames(upper_matrix) &lt;- c(&quot;UPPER&quot;, &quot;COUNTY&quot;, &quot;MONTH&quot;, &quot;RMSP&quot;)
+
+#fill in upper
+for(i in 1:12 * length(county_vec)){
+  upper_matrix[,1] &lt;- upperq_matrix[,]
+}
+#fill in months
+upper_matrix[,3] &lt;- rep(seq(1:12), length(county_vec))
+#fill in counties
+upper_matrix[seq(1,12),2] &lt;- rep(county_vec[1], 12)
+for(i in 1:49){
+  x &lt;- 12 * (i-1)
+  upper_matrix[x + seq(1,12),2] &lt;- rep(county_vec[i], 12)
+}
+#convert to data frame
+upper_matrix &lt;- as.data.frame(upper_matrix)
+
+#isolate RMSPs
+x &lt;- rep(NA, length(county_vec))
+for(i in 1:length(county_vec)){
+  which.i &lt;- which(data$COUNTY == county_vec[i])
+  y &lt;- rep(NA, length(which.i))
+  y &lt;- data$RMSP[which.i]
+  x[i] &lt;- mean(y)
+}
+rmsp_vec &lt;- x
+
+#fill in RMSPs
+upper_matrix[seq(1,12),4] &lt;- rep(rmsp_vec[1], 12)</code></pre>
+<pre><code>## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated</code></pre>
+<pre class="r"><code>for(i in 1:length(county_vec)){
+  x &lt;- 12 * (i-1)
+  upper_matrix[x + seq(1,12),4] &lt;- rep(rmsp_vec[i], 12)
+}</code></pre>
+<pre><code>## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated
+
+## Warning in `[&lt;-.factor`(`*tmp*`, iseq, value = c(1, 1, 1, 1, 1, 1, 1, 1, :
+## invalid factor level, NA generated</code></pre>
+<pre class="r"><code>#remove NAs
+upper_matrix &lt;- subset(upper_matrix, !is.na(UPPER))
+
+#change RMSP to a factor
+upper_matrix$RMSP &lt;- as.factor(upper_matrix$RMSP)
+
+#change UPPER to a number
+upper_matrix$UPPER &lt;- as.numeric(upper_matrix$UPPER)
+
+##rmsp_aov_mod &lt;- aov(UPPER ~ RMSP, data = upper_matrix)
+
+upper_mean_is &lt;- subset(upper_matrix, upper_matrix$RMSP == 1)
+y1 &lt;- mean(upper_mean_is$UPPER)
+x1 &lt;- sd(upper_mean_is$UPPER)
+
+upper_mean_not &lt;- subset(upper_matrix, upper_matrix$RMSP == 0)
+y2 &lt;- mean(upper_mean_not$UPPER)
+x2 &lt;- sd(upper_mean_not$UPPER)
+
+#sort by month for both
+x &lt;- order(upper_mean_is$MONTH)
+upper_mean_is &lt;- upper_mean_is[order(upper_mean_is$MONTH),]</code></pre>
+<div id="preliminary-analysis" class="section level3">
+<h3>Preliminary analysis</h3>
+<ul>
+<li>rmsp_aov_mod is not displaying a p-value, only sum of squares and degrees of freedom.</li>
+<li>In order to provide some sort of descriptive statistics here, the mean of those within the regional metropolitan area (RMSP = 1) is NaN and the standard deviation is NA.</li>
+<li>The mean of those not within the regional metropolitan area (RMSP = 0) is NaN and the standard deviation is NA.</li>
+</ul>
+<p><strong>TO DO:</strong></p>
+<ul>
+<li>Sort by month regardless of county, so that progress of the epidemic within each county can be accounted for.</li>
+<li>Plot upper_mean_is (black) and upper_mean_not (red) in order to look for a visual trend/sign that there is a difference between counties within the regional metropolitan area and not within the regional metropolitan area.</li>
+</ul>
+</div>
+</div>
 <div id="divide-counties-by-rmsp" class="section level2">
 <h2>Divide counties by RMSP</h2>
 <pre class="r"><code>#list of each county
