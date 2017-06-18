@@ -1,0 +1,31 @@
+---
+title: "Identification of Spark Cases"
+author: "Maggie Walters"
+date: "June 18, 2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This document aims to identify patterns/trends in the spark cases within each county. The protocol will be as follows:
+
+* Create a matrix (**insert name**) including the first cases within each county as well as the cases the proceed in the following month. 
+* Identify those which are in the same district.
+* Look for any similarities in age patterns at the beginning of an outbreak. 
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

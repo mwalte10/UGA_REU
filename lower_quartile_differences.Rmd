@@ -1,0 +1,34 @@
+---
+title: "Lower Quartile Differences between Urban and Rural"
+author: "Maggie Walters"
+date: "June 18, 2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+The differences in lower quartile between urban and rural communities is being explored because it was found that while RMSP has an effect on upper quartile, it does not on the lower. The reason for this will be explored in the follwoing ways:
+
+* Change RMSP to have more factors by creating distances from Sao Pualo using the Google maps package. 
+    + Possibly do five distance groups: 0-20 km, 20-40 km, 40-60 km, 60-80 km, and 80+ km. 
+* If the null hypothesis is rejected for this, do a MCT (can these be done for non-parametric tests?) in order to see which distance groups shows a siginificant effect on lower quartile. 
+
+
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
