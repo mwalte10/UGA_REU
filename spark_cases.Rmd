@@ -6,18 +6,123 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
+rm(list = ls())
+
 knitr::opts_chunk$set(echo = TRUE)
+options(repos=structure(c(CRAN="YOUR FAVORITE MIRROR")))
+install.packages("devtools")
+devtools::install_github("ropenscilabs/arresteddev")
+library("arresteddev")
+
+#project set up
+setwd("~/Desktop/UGA_REU/lab_work/")
+data = read.csv('spm.data.long.csv', na.strings = c('', 'NA'), header = TRUE, sep = ',')
+data_age = subset(data, !(is.na(data$AGE)))
+data_age_confirmed = subset(data_age, (data_age$CONCLUSION=="CONFIRMED" | data_age$CONCLUSION=="CLINICAL"))
+data = subset(data_age_confirmed, !(is.na(data_age_confirmed$ONSET)))
+data_onset <- as.Date(data$ONSET, "%m/%d/%Y")
+mnth <- as.integer(substr(data_onset, 6, 7))
+yr<- as.integer(substr(data_onset, 1, 4))
+
+county_vec <- as.character(unique(data$COUNTY))
 ```
 
-## R Markdown
+## Document Synopsis
 
 This document aims to identify patterns/trends in the spark cases within each county. The protocol will be as follows:
 
 * Create a matrix (**insert name**) including the first cases within each county as well as the cases the proceed in the following month. 
+    + The matrix should include: age at onset, week, district, county, RMSP (just in case)
 * Identify those which are in the same district.
 * Look for any similarities in age patterns at the beginning of an outbreak. 
-```{r cars}
-summary(cars)
+```{r Order by week}
+#order by week
+data <- data[order(data$WEEK),]
+
+#want to find the earliest appearance of a county 
+index_mat <- matrix(rep(NA, length(county_vec) * 100), ncol = length(county_vec))
+colnames(index_mat) <- county_vec
+for(i in 1:length(county_vec)){
+  which.county <- which(data$COUNTY == county_vec[i])
+  which.county <- which.county[1:100]
+  index_mat[,i] <- which.county
+}
+
+#find which indeces correspond to which weeks
+which_week_mat <- matrix(rep(NA, 3 * max(data$WEEK)), ncol = 3)
+colnames(which_week_mat) <- c("WEEK", "MIN", "MAX")
+for(i in 1:max(data$WEEK)){
+  which.week <- which(data$WEEK == i)
+  which_week_mat[i,1] <- i
+  which_week_mat[i,2] <- min(which.week, na.rm = TRUE)
+  which_week_mat[i,3] <- max(which.week, na.rm = TRUE)
+}
+
+#new mat
+index_week_mat <- matrix(rep(NA, 3 * length(county_vec) * 100), ncol = 3)
+colnames(index_week_mat) <- c("NUM", "COUNTY", "WEEK")
+
+#fill in county
+index_week_mat[seq(1:100),2] <- rep(county_vec[1], 100)
+for(i in 2: length(county_vec)){
+  x <- 100 * (i-1)
+  index_week_mat[x + seq(1:100), 2] <- rep(county_vec[i], 100)
+}
+
+#fill index
+for(i in 1: length(county_vec) * 100){
+  index_week_mat[,1] <- index_mat[,]
+}
+
+#remove NAs
+index_week_mat <- as.data.frame(index_week_mat)
+index_week_mat <- subset(index_week_mat, !is.na(index_week_mat$NUM))
+which_week_mat <- as.data.frame(which_week_mat)
+which_week_mat <- subset(which_week_mat, !is.na(which_week_mat$MIN) & !is.na(which_week_mat$MAX))
+
+#fill week
+index_week_mat$NUM <- as.numeric(index_week_mat$NUM)
+which_week_mat$MIN <- as.numeric(which_week_mat$MIN)
+which_week_mat$MAX <- as.numeric(which_week_mat$MAX)
+
+for(i in 1:length(county_vec) * 100){
+  for(j in 1:53){
+    x <- index_week_mat$NUM[i] > which_week_mat$MIN[j]
+    y <- index_week_mat$NUM[i] < which_week_mat$MAX[j]
+    if(x & y){
+    index_week_mat[i,3] <- j
+     }
+  }
+}
+
+
+index_week_mat[1,1]
+which(which_week_mat[,2] < index_week_mat[1,1])
+which(which_week_mat[,3] > index_week_mat[1,1])
+
+for(i in 1:length(county_vec) * 100){
+  if(which(which_week_mat[,2] < index_week_mat[i,1])[1] == which(which_week_mat[,3] > index_week_mat[i,1])[1]){
+    index_week_mat[i,3] <- which(which_week_mat[,2] < index_week_mat[i,1])[1]
+  }
+}
+
+for(i in 1:length(county_vec) * 100){
+  which.min.test <- which(which_week_mat[,2] < index_week_mat[i,1])
+  which.max.test <- which(which_week_mat[,3] > index_week_mat[i,1])
+  if(which.min.test[1] == which.max.test[1]){
+    index_week_mat[i,3] <- which.min.test[1]
+  }
+}
+
+which.min.test <- which(which_week_mat[,2] < index_week_mat[1,1])
+  which.max.test <- which(which_week_mat[,3] > index_week_mat[1,1])
+  as.numeric(which.min.test)
+  as.numeric(which.max.test)
+  if(max(which.min.test) == min(which.max.test)){
+    index_week_mat[1,3] <- max(which.min.test)
+  }
+
+
 ```
 
 ## Including Plots
