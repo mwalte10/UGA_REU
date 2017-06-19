@@ -84,53 +84,42 @@ which_week_mat <- subset(which_week_mat, !is.na(which_week_mat$MIN) & !is.na(whi
 index_week_mat$NUM <- as.numeric(index_week_mat$NUM)
 which_week_mat$MIN <- as.numeric(which_week_mat$MIN)
 which_week_mat$MAX <- as.numeric(which_week_mat$MAX)
+index_week_mat$WEEK <- as.numeric(index_week_mat$WEEK)
 
-for(i in 1:length(county_vec) * 100){
+for(i in 1:38700){
   for(j in 1:53){
     x <- index_week_mat$NUM[i] > which_week_mat$MIN[j]
     y <- index_week_mat$NUM[i] < which_week_mat$MAX[j]
-    if(x & y){
+    if(x && y){
     index_week_mat[i,3] <- j
      }
   }
 }
 
-
-index_week_mat[1,1]
-which(which_week_mat[,2] < index_week_mat[1,1])
-which(which_week_mat[,3] > index_week_mat[1,1])
-
-for(i in 1:length(county_vec) * 100){
-  if(which(which_week_mat[,2] < index_week_mat[i,1])[1] == which(which_week_mat[,3] > index_week_mat[i,1])[1]){
-    index_week_mat[i,3] <- which(which_week_mat[,2] < index_week_mat[i,1])[1]
-  }
+which.na <- which(is.na(index_week_mat$WEEK))
+index.which <- index_week_mat$NUM[which.na]
+week_sub <- c(13, 19, 26, 3,
+              1, 17, 5, 27,
+              11, 9, 16, 27,
+              26, 18, 19, 21,
+              23, 23, 2, 20,
+              38, 12, 22, 24,
+              10, 4, 7, 8,
+              8, 25, 17, 1,
+              9, 2, 12, 13,
+              21, 10, 11, 14,
+              28, 18, 22, 20,
+              24, 14, 15, 3,
+              4, 15, 16, 5,
+              6, 6, 7)
+for(i in 1:length(which.na)){
+  index_week_mat$WEEK[which.na[i]] <- week_sub[i]
 }
-
-for(i in 1:length(county_vec) * 100){
-  which.min.test <- which(which_week_mat[,2] < index_week_mat[i,1])
-  which.max.test <- which(which_week_mat[,3] > index_week_mat[i,1])
-  if(which.min.test[1] == which.max.test[1]){
-    index_week_mat[i,3] <- which.min.test[1]
-  }
-}
-
-which.min.test <- which(which_week_mat[,2] < index_week_mat[1,1])
-  which.max.test <- which(which_week_mat[,3] > index_week_mat[1,1])
-  as.numeric(which.min.test)
-  as.numeric(which.max.test)
-  if(max(which.min.test) == min(which.max.test)){
-    index_week_mat[1,3] <- max(which.min.test)
-  }
 
 
 ```
 
-## Including Plots
+### To do:
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+* Sort by week per county. 
+* Look at pattern that the beginning cases follow. 
