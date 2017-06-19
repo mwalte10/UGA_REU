@@ -6,29 +6,258 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
+rm(list = ls())
+
 knitr::opts_chunk$set(echo = TRUE)
+options(repos=structure(c(CRAN="YOUR FAVORITE MIRROR")))
+install.packages("devtools")
+devtools::install_github("ropenscilabs/arresteddev")
+library("arresteddev")
+
+#project set up
+setwd("~/Desktop/UGA_REU/lab_work/")
+data = read.csv('spm.data.long.csv', na.strings = c('', 'NA'), header = TRUE, sep = ',')
+data_age = subset(data, !(is.na(data$AGE)))
+data_age_confirmed = subset(data_age, (data_age$CONCLUSION=="CONFIRMED" | data_age$CONCLUSION=="CLINICAL"))
+data = subset(data_age_confirmed, !(is.na(data_age_confirmed$ONSET)))
+data_onset <- as.Date(data$ONSET, "%m/%d/%Y")
+mnth <- as.integer(substr(data_onset, 6, 7))
+yr<- as.integer(substr(data_onset, 1, 4))
+
+county_vec <- as.character(unique(data$COUNTY))
 ```
 
-## R Markdown
+## Document synopsis
 
-The differences in lower quartile between urban and rural communities is being explored because it was found that while RMSP has an effect on upper quartile, it does not on the lower. The reason for this will be explored in the follwoing ways:
+The differences in lower quartile between urban and rural communities is being explored because it was found that while RMSP has an effect on upper quartile, it does not on the lower. This observation will be explored in the follwoing ways:
 
 * Change RMSP to have more factors by creating distances from Sao Pualo using the Google maps package. 
     + Possibly do five distance groups: 0-20 km, 20-40 km, 40-60 km, 60-80 km, and 80+ km. 
 * If the null hypothesis is rejected for this, do a MCT (can these be done for non-parametric tests?) in order to see which distance groups shows a siginificant effect on lower quartile. 
 
 
+## Finding Distance between each County and Sao Paulo County 
 
-```{r cars}
-summary(cars)
+The package "ggmap" was used in order to find the distance between each county and Sao Paulo county in kilometers. This will be used to make distance classes that are more specific than RMSP.
+
+```{r Distance from Sao Paulo, echo=FALSE, warning=FALSE}
+install.packages("ggmap")
+library(ggmap)
+
+DISTANCE_IN_KM <- rep(0, 387)
+for(i in 2:387){
+  distance_i <- mapdist(from = county_vec[1], to = county_vec[i])
+  DISTANCE_IN_KM[i] <- distance_i$km
+}
+
+#Parse out those with NA and force a value:
+which.NA.distance <- which(is.na(DISTANCE_IN_KM))
+
+#22
+DISTANCE_IN_KM[22] <- "400.4"
+#23
+DISTANCE_IN_KM[23] <- "234.7"
+#31
+DISTANCE_IN_KM[31] <- "472.2"
+#63
+DISTANCE_IN_KM[63] <- "180.9"
+#65
+DISTANCE_IN_KM[65] <- "339.9"
+#67
+DISTANCE_IN_KM[67] <- "332"
+#97
+DISTANCE_IN_KM[97] <- "406.7"
+#113
+DISTANCE_IN_KM[113] <- "1044.5"
+#118
+DISTANCE_IN_KM[118] <- "102.6"
+#138
+DISTANCE_IN_KM[138] <- "494.2"
+#140
+DISTANCE_IN_KM[140] <- "695.8"
+#149
+DISTANCE_IN_KM[149] <- "315"
+#162
+DISTANCE_IN_KM[162] <- "189.9"
+#176, could not find
+DISTANCE_IN_KM[176] <- NA
+#187
+DISTANCE_IN_KM[187] <- "574.4"
+#188
+DISTANCE_IN_KM[188] <- "1212.9"
+#220, could not find
+DISTANCE_IN_KM[220] <- NA
+#222
+DISTANCE_IN_KM[222] <- "58.9"
+#226
+DISTANCE_IN_KM[226] <- "140.6"
+#286
+DISTANCE_IN_KM[286] <- "73.4"
+#295
+DISTANCE_IN_KM[295] <- "359.8"
+#299
+DISTANCE_IN_KM[299] <- "134.6"
+#301, could not find
+DISTANCE_IN_KM[301] <- NA
+#312
+DISTANCE_IN_KM[312] <- "405.7"
+#340
+DISTANCE_IN_KM[340] <- "564.1"
+#343
+DISTANCE_IN_KM[343] <- "1874.1"
+#355
+DISTANCE_IN_KM[355] <- "455.4"
+#368
+DISTANCE_IN_KM[368] <- "549.9"
+#370
+DISTANCE_IN_KM[370] <- "341.3"
+
 ```
 
-## Including Plots
+## Creating Distance Classes
 
-You can also embed plots, for example:
+Distance from Sao Paulo county was classified into 5 age group classes using quantile classifications, as followed: 
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+* A: 0 < x < 133.7047 
+* B: 133.7047 < x < 263.869
+* C: 263.869 < x < 440.695
+* D: 440.695 < x < 7342.106
+* E: NA
+
+These were then converted into factors in order to preform an analysis of variance with the following null and alternative hypotheses:
+
+*H~O~: Distance class does not affect the lower quantile value.
+*H~A~: Distance class does affect the lower quantile value. 
+
+```{r distance classes}
+DISTANCE_IN_KM <- as.numeric(DISTANCE_IN_KM)
+quantile(DISTANCE_IN_KM, na.rm = TRUE)
+
+distance_class <- rep(NA, length(DISTANCE_IN_KM))
+
+which.A <- which(0 <= DISTANCE_IN_KM & DISTANCE_IN_KM <= 133.7047)
+which.B <- which(133.7047 < DISTANCE_IN_KM & DISTANCE_IN_KM <= 263.8690)
+which.C <- which(263.8690 < DISTANCE_IN_KM & DISTANCE_IN_KM <=  440.6950)
+which.D <- which(440.6950 < DISTANCE_IN_KM & DISTANCE_IN_KM <= 7342.1060)
+which.E <- which(is.na(DISTANCE_IN_KM))
+
+distance_class[which.A] <- "A"
+distance_class[which.B] <- "B"
+distance_class[which.C] <- "C"
+distance_class[which.D] <- "D"
+distance_class[which.E] <- "E"
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Setting up table for ANOVA 
+
+### Code taken from "descriptive_statistics_by_urba:rural.Rmd"
+```{r ANOVA table}
+#create blank lower quartile matrix
+lowerq_matrix <- matrix(rep(NA, length(county_vec) * 12), nrow = 12, ncol = length(county_vec))
+colnames(lowerq_matrix) <- county_vec
+months <- c("January", "Febuary", "March", 
+            "April", "May", "June",
+            "July", "August", "September",
+            "October", "November", "December")
+row.names(lowerq_matrix) <- months
+
+#find lower quartile for each county in each month
+for(i in 1:12){
+  x <- subset(data, data$MONTH == i)
+  for(j in 1:387){
+    which.county_j <- which(x$COUNTY == county_vec[j])
+    county_j_ages <- x$AGE[which.county_j]
+    lowerq_matrix[i,j] <- quantile(county_j_ages)[2]
+  }
+}
+lower_matrix <- matrix(rep(NA, 4 * 12*length(county_vec)), ncol = 4)
+colnames(lower_matrix) <- c("LOWER", "COUNTY", "MONTH", "DISTANCE")
+
+#fill in lower
+for(i in 1:12 * length(county_vec)){
+  lower_matrix[,1] <- lowerq_matrix[,]
+}
+#fill in months
+lower_matrix[,3] <- rep(seq(1:12), length(county_vec))
+#fill in counties
+lower_matrix[seq(1,12),2] <- rep(county_vec[1], 12)
+for(i in 2:387){
+  x <- 12 * (i-1)
+  lower_matrix[x + seq(1,12),2] <- rep(county_vec[i], 12)
+}
+#fill in distance class
+lower_matrix[seq(1,12),4] <- rep(distance_class[1],12)
+for(i in 1:length(distance_class)){
+  x <- 12 * (i-1)
+  lower_matrix[x + seq(1,12),4] <- rep(distance_class[i], 12)
+}
+
+lower_matrix <- as.data.frame(lower_matrix)
+lower_matrix <- subset(lower_matrix, !is.na(lower_matrix$LOWER))
+```
+
+##Run ANOVA or NP test
+```{r}
+lower_matrix$LOWER <- as.numeric(lower_matrix$LOWER)
+
+#ANOVA, p = 0.111
+lower_distance_class_mod <- aov(lower_matrix$LOWER ~ lower_matrix$DISTANCE, data = lower_matrix)
+#assess for normality, NOT NORMAL
+shapiro.test((resid(lower_distance_class_mod)))
+plot(lower_distance_class_mod, which = c(1,2))
+hist(resid(lower_distance_class_mod))
+
+#NON-PARAMETRIC TEST, p = 0.08664
+np_lower_distance_mod <- kruskal.test(lower_matrix$LOWER ~ lower_matrix$DISTANCE, data = lower_matrix)
+```
+
+### Preliminary analysis:
+
+The ANOVA for assessing lower quantile with distance class yielded insignificant (p = 0.111) and non-normal results. This led to running a non-parametric test (Kruskal-Wallis), which also yielded insignificant results (p = 0.08664). This leads to failure to reject the null hypothesis. However. There were three counties which had a NA value because they were not found via a preliminary Google search. Moving forward, I will remove these three counties in order to see if this leads to significant results. 
+
+## ANOVA/ NP tests without NA listings
+```{r removing NAs and running an analysis of variance}
+which.E.mat <- which(lower_matrix$DISTANCE == "E")
+
+lower_mat <- lower_matrix[-1115,]
+lower_mat <- lower_mat[-889,]
+lower_mat <- lower_mat[-888,]
+lower_mat <- lower_mat[-887,]
+lower_mat <- lower_mat[-753,]
+
+#ANOVA without the NA's
+lower_mat$LOWER <- as.numeric(lower_mat$LOWER)
+#p = 0.143
+lower_mat_aov <- aov(lower_mat$LOWER ~ lower_mat$DISTANCE, data = lower_mat)
+#assess for normality, NOT NORMAL
+shapiro.test((resid(lower_mat_aov)))
+plot(lower_mat_aov, which = c(1,2))
+hist(resid(lower_mat_aov))
+
+#NON-PARAMETRIC TEST, p = 0.1025
+np_lower_mat <- kruskal.test(lower_mat$LOWER ~ lower_mat$DISTANCE, data = lower_mat)
+
+
+```
+
+### Preliminary analysis
+
+Obtained a higher p-value for both of the analysis of variance tests (with p = 0.143 for the ANOVA and p = 0.1025 for the non-parametric test). Again, the ANOVA failed to achieve normality. I feel that at this point then, that the null hypothesis must be accepted. Essentially, **distance from Sao Paulo county does not affect the lower quartile of age of infection.**
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
