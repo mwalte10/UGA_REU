@@ -1,0 +1,219 @@
+---
+title: "Identification of Spark Cases"
+author: "Maggie Walters"
+date: "June 18, 2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+rm(list = ls())
+
+knitr::opts_chunk$set(echo = TRUE)
+options(repos=structure(c(CRAN="YOUR FAVORITE MIRROR")))
+install.packages("devtools")
+devtools::install_github("ropenscilabs/arresteddev")
+library("arresteddev")
+
+#project set up
+setwd("~/Desktop/UGA_REU/lab_work/")
+data = read.csv('spm.data.long.csv', na.strings = c('', 'NA'), header = TRUE, sep = ',')
+data_age = subset(data, !(is.na(data$AGE)))
+data_age_confirmed = subset(data_age, (data_age$CONCLUSION=="CONFIRMED" | data_age$CONCLUSION=="CLINICAL"))
+data = subset(data_age_confirmed, !(is.na(data_age_confirmed$ONSET)))
+data_onset <- as.Date(data$ONSET, "%m/%d/%Y")
+mnth <- as.integer(substr(data_onset, 6, 7))
+yr<- as.integer(substr(data_onset, 1, 4))
+
+county_vec <- as.character(unique(data$COUNTY))
+```
+
+## Document Synopsis
+
+This document aims to identify patterns/trends in the spark cases within each county. The protocol will be as follows:
+
+* Create a matrix (**index_week_mat**) including the first 100 cases within each county as well as the age of that specific case, and the week and county in which it occurred. 
+* Identify those which are in the same district.
+* Look for any similarities in age patterns at the beginning of an outbreak. 
+
+### Creating index_week_mat
+
+index_week_mat will be created by pulling out the index of the first 100 cases in county *i*. The county name and week in which the case occured will also be recorded. 
+
+```{r First 100 cases in each county, with week and index, echo = FALSE}
+index_week_mat <- matrix(rep(NA, 3 * length(county_vec) * 100), ncol = 3)
+colnames(index_week_mat) <- c("NUM", "COUNTY", "WEEK")
+index_week_mat <- as.data.frame(index_week_mat)
+
+#order by week
+data_ordered <- data[order(data$WEEK),]
+
+#matrix with indeces
+index_mat <- matrix(rep(NA, length(county_vec) * 100), ncol = length(county_vec))
+colnames(index_mat) <- county_vec
+for(i in 1:length(county_vec)){
+  which.county <- which(data_ordered$COUNTY == county_vec[i])
+  which.county <- which.county[1:100]
+  index_mat[,i] <- which.county
+}
+
+#fill in county
+index_week_mat[seq(1:100),2] <- rep(county_vec[1], 100)
+for(i in 2: length(county_vec)){
+  x <- 100 * (i-1)
+  index_week_mat[x + seq(1:100), 2] <- rep(county_vec[i], 100)
+}
+
+#fill index
+index_week_mat[seq(1:100),1] <- index_mat[,1]
+for(i in 2: 387){
+  x <- 100 * (i-1)
+  index_week_mat[x + seq(1:100),1] <- index_mat[,i]
+}
+
+#fill week
+index_week_mat <- as.data.frame(index_week_mat)
+index_week_mat$WEEK <- as.numeric(index_week_mat$WEEK)
+index_week_mat <- subset(index_week_mat, !is.na(index_week_mat$NUM))
+
+for(i in 1:38700){
+  x <- index_week_mat$NUM[i]
+  x <- as.numeric(as.character(x))
+  y <- data_ordered$WEEK[x]
+  y <- as.numeric(as.character(y))
+  index_week_mat[i,3] <- y
+}
+
+
+```
+
+### Preliminary Analysis:
+
+Some cases do not have more than 100 cases, so they have relatively small case loads. Could change to doing counties with more than 20 cases, which would amount to approximately 80 counties. Again, I am coming across the question of **what is the minimum number of cases necessary for a disease outbreak to be considered an epidemic?**
+
+
+## Examine ages of first 100 cases and timing
+
+AGE was added as a variable to the index_week_mat in order to examine age distribution patterns. 
+
+```{r add age to index_week_mat}
+#fill in age
+AGE <- rep(NA, 38700)
+index_week_mat <- cbind(AGE, index_week_mat)
+
+
+for(i in 1:38700){
+  x <- index_week_mat[i,2]
+  x <- as.numeric(as.character(x))
+  index_week_mat[i,1] <- data_ordered$AGE[x]
+}
+
+```
+
+## Ordering the cases in ascending order of week of onset
+
+```{r Order by week}
+index_week_mat <- index_week_mat[order(index_week_mat$WEEK),] 
+```
+
+## Plot age by week for each county
+
+```{r plot age by week}
+#need to remove rows 6759 to 38700, just going to make a new matrix called the same thing
+which.na <- which(is.na(index_week_mat$WEEK))
+
+index_week_mat <- subset(index_week_mat, !is.na(index_week_mat$NUM) & !is.na(index_week_mat$AGE)
+                         & !is.na(index_week_mat$COUNTY) & !is.na(index_week_mat$WEEK))
+index_week_mat$WEEK <- as.numeric(index_week_mat$WEEK)
+index_week_mat$AGE <- as.numeric(index_week_mat$AGE)
+for(i in 1:length(county_vec)){
+  x <- subset(index_week_mat, index_week_mat$COUNTY == county_vec[i])
+  x$AGE <- as.numeric(as.character(x$AGE))
+  plot(x$WEEK, x$AGE, type = "b", main = county_vec[i], xlim=c(0,53))
+}
+```
+
+### Preliminary analysis:
+
+Graphs of counties with less than 10 cases are really unhelpful visually. Additionally, the the line graph seems to indicate causation between cases, which is not accurate. 
+
+Next step:
+
+* If available, make all of the cases which occurred in the same district the same color. 
+
+## Examination by district
+
+**Just realized that I only have district data for those in Sao Paulo county. I will make graphs for all of the information that I have available.**
+
+```{r examination by district}
+x <- subset(data, data$COUNTY == "SAO PAULO")
+x <- subset(x, !is.na(x$DISTRICT))
+test_district <- as.character(unique(x$DISTRICT))
+
+
+sp.index_week_mat <- subset(index_week_mat, index_week_mat$COUNTY == county_vec[1])
+sp.data <- data[as.numeric(as.character(sp.index_week_mat$NUM)),]
+sp.data <- subset(sp.data, !is.na(sp.data$DISTRICT))
+unique.district <- unique(sp.data$DISTRICT)
+
+for(i in 1:length(unique.district)){
+  dis.which <- which(sp.data$DISTRICT == unique.district[i])
+  plot(sp.index_week_mat$WEEK[dis.which], sp.index_week_mat$AGE[dis.which], 
+     pch = 19, 
+     main = unique.district[i])
+}
+
+
+
+```
+
+###Preliminary analysis:
+
+It does not seem that analysis via examination by district is going to be very informative. District is only available for Sao Paulo county, and on examination of the first one hundred cases by district for Sao Paulo county, there is not obvious trend. 
+
+## Stage of epidemic in each county during each week of the epidemic
+```{r stage of epidemic}
+
+status_mat <- matrix(rep(NA, length(county_vec) * 53), ncol = length(county_vec))
+colnames(status_mat) <- county_vec
+rownames(status_mat) <- seq(1:53)
+
+for(i in 1:length(county_vec)){
+  for(j in 1:53){
+    x <- subset(data, data$COUNTY == county_vec[i] & data$WEEK == j)
+    status_mat[j,i] <- nrow(x)
+  }
+}
+
+##contracting from someone in the same district
+#i = county_vec[i]
+#j = week
+active_cases <- function(i, j){
+  day_one <- 1 * status_mat[j-1,i] + 1 * status_mat[j-2,i] + (6/7) * status_mat[j-3,i]
+  day_two <- 1 * status_mat[j-1,i] + 1 * status_mat[j-2,i] + (5/7) * status_mat[j-3,i] + (1/7) * status_mat[j,i]
+  day_three <- 1 * status_mat[j-1,i] + 1 * status_mat[j-2,i] + (4/7) * status_mat[j-3,i] + (2/7) * status_mat[j,i]
+  day_four <- 1 * status_mat[j-1,i] + 1 * status_mat[j-2,i] + (3/7) * status_mat[j-3,i] + (3/7) * status_mat[j,i]
+  day_five <- 1 * status_mat[j-1,i] + 1 * status_mat[j-2,i] + (2/7) * status_mat[j-3,i] + (4/7) * status_mat[j,i]
+  day_six <- 1 * status_mat[j-1,i] + 1 * status_mat[j-2,i] + (1/7) * status_mat[j-3,i] + (5/7) * status_mat[j,i]
+  day_seven <- 1 * status_mat[j-1,i] + 1 * status_mat[j-2,i] + (6/7) * status_mat[j,i]
+  days <- c(day_one, day_two, day_three, day_four, day_five, day_six, day_seven)
+return(days)
+}
+
+install.packages("ggmap")
+library(ggmap)
+
+distance <- function(to, from){
+  distance <- mapdist(from = from, to = to)
+  return(distance$km)
+}
+ 
+```
+
+* Created the function **active_cases(i, j)**, which describes the amount of infectious cases in one county (*i*) at one time (*j* in weeks). Goal is to scale this value by population size in order to represent the chance that you'd come into contact with an infected individual. 
+* These values would also eventually be done to describe the chance of contacting someone from another county who is infected. The chance of being infected by someone in a different county would be scaled by distance from your county to the county in question, and possible immigration rates if possible. 
+    + Could also use whether the area is urban or rural as a scaling factor. 
+    + Urban centers would be scaled lower for those in rural area because rural to urban is more likely than urban to rural. 
+* Also created the function **distance(to, from)** which outputs the distance from one county to another. 
+
+
+
