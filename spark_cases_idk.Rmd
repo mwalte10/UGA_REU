@@ -183,7 +183,30 @@ for(i in 1:length(county_vec)){
     status_mat[j,i] <- nrow(x)
   }
 }
+ 
+```
 
+* Created the function **active_cases(i, j)**, which describes the amount of infectious cases in one county (*i*) at one time (*j* in weeks). Goal is to scale this value by population size in order to represent the chance that you'd come into contact with an infected individual. 
+* These values would also eventually be done to describe the chance of contacting someone from another county who is infected. The chance of being infected by someone in a different county would be scaled by distance from your county to the county in question, and possible immigration rates if possible. 
+    + Could also use whether the area is urban or rural as a scaling factor. 
+    + Urban centers would be scaled lower for those in rural area because rural to urban is more likely than urban to rural. 
+* Also created the function **distance(to, from)** which outputs the distance from one county to another. 
+
+
+## Population Sizes
+
+Requested three files from Annakate (vac.cov.by.county.csv, pop.by.county.csv, pop.age.by.district.csv). I plan to use the pop.by.county.csv in order to estimate the approxiamate chance of encountering someone with measles.
+
+Also need to estimate the transmissability of measles. R~o~ represents the average number of secondary infections caused by one primary, so R~o~ divided by total contacts should represent the chance that any one contact is one of the ones that is infected. 
+
+**But,** is this really what I am aiming to do here? I want to create something that describes the chance that the original infection case arrived from the county of interest. This should be a representation both of "infectedness" of the county as well as the chance that someone from the county encountered someone from the county of interest. 
+
+This can really be broken down into two parts: the "infectedness" of the county and the county's socialability. Socialability here being how often this county would encounter someone from another county.
+
+**Estimating infectedness of a county:** This can crudely be estimated by the amount of individuals infected at one time over the population size. This is then by definition the proportion of individuals in a county which are infected. 
+    + This would be interesting to somehow scale by age. Assuming that mainly adults are immigrating out of rural areas and into urban areas, the infectedness should be higher in counties with a higher age of infection. 
+
+```{r infectedness of a county}
 ##contracting from someone in the same district
 #i = county_vec[i]
 #j = week
@@ -199,21 +222,90 @@ active_cases <- function(i, j){
 return(days)
 }
 
+pop_size = read.csv('pop.by.county.csv', na.strings = c('', 'NA'), header = TRUE, sep = ',')
+
+prop.active_cases <- function(i, j){
+  which.pop <- which(pop_size$COUNTY == county_vec[i])
+  prop <- active_cases(i, j) / pop_size$population[which.pop]
+  return(prop)
+}
+```
+
+**Estimating the socialability of a county:** I plan to estimate this using the distance between the two counties. If migration is long-term there should be a term here that increases the socialablity of rural counties because they are sending more, significant people into rural areas. If migration is short-term this should be negated. 
+
+Need some way to scale distance. Essentially, there needs to be some way to say that if the distance between two counties is small, then there is a greater chance that the two counties will come in contact with each other. For now I will use: $$1- (x / \sqrt{y})$$ with x = distance between the two counties and y = area of Sao Paulo state. 
+
+```{r estimating socialability of a county}
 install.packages("ggmap")
 library(ggmap)
 
-distance <- function(to, from){
+distance <- function(k, i){
+  to <- county_vec[k]
+  from <- county_vec[i]
   distance <- mapdist(from = from, to = to)
   return(distance$km)
 }
- 
+
+social <- function(k, i){
+  social.prop <- 1 - ((distance(k, i)) / sqrt(248222.8))
+  return(social.prop)
+}
+
 ```
 
-* Created the function **active_cases(i, j)**, which describes the amount of infectious cases in one county (*i*) at one time (*j* in weeks). Goal is to scale this value by population size in order to represent the chance that you'd come into contact with an infected individual. 
-* These values would also eventually be done to describe the chance of contacting someone from another county who is infected. The chance of being infected by someone in a different county would be scaled by distance from your county to the county in question, and possible immigration rates if possible. 
-    + Could also use whether the area is urban or rural as a scaling factor. 
-    + Urban centers would be scaled lower for those in rural area because rural to urban is more likely than urban to rural. 
-* Also created the function **distance(to, from)** which outputs the distance from one county to another. 
+Now I have a function (**prop.active_cases**) that describes the infectedness of a county (not associated with age, but could take it further to this) and a function (**social**) that describes it's socialability (not associated with RMSP). Going to create a function that just relates the two by multiplying them together in order to describe which county the infection most likely spread from.
+
+```{r combine socialability and infectiousness}
+#i: index of county spread from
+#j: week
+#k: index of the county spread to 
+spread <- function(i, j, k){
+  spread <- prop.active_cases(i, j) * social(k, i)
+  return(spread)
+}
+
+```
+
+Created the function **spread(i, j, k)** which shows the probability that the infection spread from county *i* to county *k* in week *j*. **spread(i, j, k)** returns a vector of seven values which represent the probability on each day of week *j*.
+
+Now that I have this, if infections were being spread to urban areas from rural areas, the spread outputs should be higher when i is a rural county and when j is an urban county. Important to keep in mind the critical community size for the measles outbreak to occur. Refer back to the Nasell paper (2005).
+
+```{r Urban to Rural}
+#RMSP = 1
+urban <- subset(data, data$RMSP == "1")
+urban_counties <- as.character(unique(urban$COUNTY))
+
+#RMSP = 0 
+rural <- subset(data, data$RMSP == "0")
+rural_counties <- as.character(unique(rural$COUNTY))
+
+
+test.mat <- matrix(rep(NA, length(rural_counties) * length(urban_counties)), ncol = length(urban_counties))
+#colnames(test.mat) <- c("Day one", "Day two", "Day three",
+                        #"Day four", "Day five", "Day six", "Day seven")
+colnames(test.mat) <- urban_counties
+rownames(test.mat) <- rural_counties
+
+for(i in 1:length(urban_counties)){
+  if(i == 34) next
+  test.mat[i,] <- spread(which(county_vec == urban_counties[i]), 26, 18)
+}
+
+#filling out some of them, but taking a long time to go through. May be of worth to just run the google maps function and find the distance between all of the places and then source this into the function. 
+for(i in 1:length(urban_counties)){
+  j = 26
+  for(k in 1:length(rural_counties)){
+    test.mat[k,i] <- spread(which(county_vec == urban_counties[i]), j, which(county_vec == rural_counties[k]))[1]
+  }
+}
+
+```
+
+
+
+
+
+
 
 
 
