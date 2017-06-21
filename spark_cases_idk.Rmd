@@ -204,23 +204,61 @@ Also need to estimate the transmissability of measles. R~o~ represents the avera
 This can really be broken down into two parts: the "infectedness" of the county and the county's socialability. Socialability here being how often this county would encounter someone from another county.
 
 **Estimating infectedness of a county:** This can crudely be estimated by the amount of individuals infected at one time over the population size. This is then by definition the proportion of individuals in a county which are infected. 
-    + This would be interesting to somehow scale by age. Assuming that mainly adults are immigrating out of rural areas and into urban areas, the infectedness should be higher in counties with a higher age of infection. 
+    + This would be interesting to somehow scale by age. Assuming that mainly adults are immigrating out of rural areas and into urban areas, the infectedness should be higher in counties with a higher age of infection.
+    
+Re: scaling to age--
+
+* `r x = which(index_week_mat$COUNTY == county_vec[i] & index_week_mat$WEEK == "j")`
+    + `r scaling factor = mean(index_week_mat$AGE[x]) / max(index_week_mat$AGE[x])`
 
 ```{r infectedness of a county}
 ##contracting from someone in the same district
 #i = county_vec[i]
 #j = week
+#option 1, mean / max
 active_cases <- function(i, j){
-  day_one <- 1 * status_mat[j-1,i] + 1 * status_mat[j-2,i] + (6/7) * status_mat[j-3,i]
-  day_two <- 1 * status_mat[j-1,i] + 1 * status_mat[j-2,i] + (5/7) * status_mat[j-3,i] + (1/7) * status_mat[j,i]
-  day_three <- 1 * status_mat[j-1,i] + 1 * status_mat[j-2,i] + (4/7) * status_mat[j-3,i] + (2/7) * status_mat[j,i]
-  day_four <- 1 * status_mat[j-1,i] + 1 * status_mat[j-2,i] + (3/7) * status_mat[j-3,i] + (3/7) * status_mat[j,i]
-  day_five <- 1 * status_mat[j-1,i] + 1 * status_mat[j-2,i] + (2/7) * status_mat[j-3,i] + (4/7) * status_mat[j,i]
-  day_six <- 1 * status_mat[j-1,i] + 1 * status_mat[j-2,i] + (1/7) * status_mat[j-3,i] + (5/7) * status_mat[j,i]
-  day_seven <- 1 * status_mat[j-1,i] + 1 * status_mat[j-2,i] + (6/7) * status_mat[j,i]
+  x.a <- which(index_week_mat$COUNTY == county_vec[i] & index_week_mat$WEEK == "j - 1")
+  sf.a <- mean(index_week_mat$AGE[x]) / max(index_week_mat$AGE[x])
+  x.b <- which(index_week_mat$COUNTY == county_vec[i] & index_week_mat$WEEK == "j -2")
+  sf.b <- mean(index_week_mat$AGE[x]) / max(index_week_mat$AGE[x])
+  x.c <- which(index_week_mat$COUNTY == county_vec[i] & index_week_mat$WEEK == "j - 3")
+  sf.c <- mean(index_week_mat$AGE[x]) / max(index_week_mat$AGE[x])
+  x.d <- which(index_week_mat$COUNTY == county_vec[i] & index_week_mat$WEEK == "j")
+  sf.d <- mean(index_week_mat$AGE[x]) / max(index_week_mat$AGE[x])
+  day_one <- sf.a * 1 * status_mat[j-1,i] + sf.b * 1 * status_mat[j-2,i] + sf.c * (6/7) * status_mat[j-3,i]
+  day_two <- sf.a * 1 * status_mat[j-1,i] + sf.b * 1 * status_mat[j-2,i] + sf.c * (5/7) * status_mat[j-3,i] + sf.d * (1/7) * status_mat[j,i]
+  day_three <- sf.a * 1 * status_mat[j-1,i] + sf.b * 1 * status_mat[j-2,i] + sf.c * (4/7) * status_mat[j-3,i] + sf.d * (2/7) * status_mat[j,i]
+  day_four <- sf.a * 1 * status_mat[j-1,i] + sf.b * 1 * status_mat[j-2,i] + sf.c * (3/7) * status_mat[j-3,i] + sf.d * (3/7) * status_mat[j,i]
+  day_five <- sf.a * 1 * status_mat[j-1,i] + sf.b * 1 * status_mat[j-2,i] + sf.c * (2/7) * status_mat[j-3,i] + sf.d * (4/7) * status_mat[j,i]
+  day_six <- sf.a * 1 * status_mat[j-1,i] + sf.b * 1 * status_mat[j-2,i] + sf.c * (1/7) * status_mat[j-3,i] + sf.d * (5/7) * status_mat[j,i]
+  day_seven <- sf.a * 1 * status_mat[j-1,i] + sf.b * 1 * status_mat[j-2,i] + sf.d * (6/7) * status_mat[j,i]
   days <- c(day_one, day_two, day_three, day_four, day_five, day_six, day_seven)
 return(days)
 }
+
+#option 2
+active_cases.mean <- function(i, j){
+  x.a <- which(index_week_mat$COUNTY == county_vec[i] & index_week_mat$WEEK == "j - 1")
+  sf.a <- mean(index_week_mat$AGE[x]) 
+  x.b <- which(index_week_mat$COUNTY == county_vec[i] & index_week_mat$WEEK == "j -2")
+  sf.b <- mean(index_week_mat$AGE[x])
+  x.c <- which(index_week_mat$COUNTY == county_vec[i] & index_week_mat$WEEK == "j - 3")
+  sf.c <- mean(index_week_mat$AGE[x]) 
+  x.d <- which(index_week_mat$COUNTY == county_vec[i] & index_week_mat$WEEK == "j")
+  sf.d <- mean(index_week_mat$AGE[x])
+  day_one <- sf.a * 1 * status_mat[j-1,i] + sf.b * 1 * status_mat[j-2,i] + sf.c * (6/7) * status_mat[j-3,i]
+  day_two <- sf.a * 1 * status_mat[j-1,i] + sf.b * 1 * status_mat[j-2,i] + sf.c * (5/7) * status_mat[j-3,i] + sf.d * (1/7) * status_mat[j,i]
+  day_three <- sf.a * 1 * status_mat[j-1,i] + sf.b * 1 * status_mat[j-2,i] + sf.c * (4/7) * status_mat[j-3,i] + sf.d * (2/7) * status_mat[j,i]
+  day_four <- sf.a * 1 * status_mat[j-1,i] + sf.b * 1 * status_mat[j-2,i] + sf.c * (3/7) * status_mat[j-3,i] + sf.d * (3/7) * status_mat[j,i]
+  day_five <- sf.a * 1 * status_mat[j-1,i] + sf.b * 1 * status_mat[j-2,i] + sf.c * (2/7) * status_mat[j-3,i] + sf.d * (4/7) * status_mat[j,i]
+  day_six <- sf.a * 1 * status_mat[j-1,i] + sf.b * 1 * status_mat[j-2,i] + sf.c * (1/7) * status_mat[j-3,i] + sf.d * (5/7) * status_mat[j,i]
+  day_seven <- sf.a * 1 * status_mat[j-1,i] + sf.b * 1 * status_mat[j-2,i] + sf.d * (6/7) * status_mat[j,i]
+  days <- c(day_one, day_two, day_three, day_four, day_five, day_six, day_seven)
+return(days)
+}
+
+#what would be the best way to introduce age into this? Should probably scale the days in active_cases. 
+
 
 pop_size = read.csv('pop.by.county.csv', na.strings = c('', 'NA'), header = TRUE, sep = ',')
 
@@ -238,6 +276,18 @@ Need some way to scale distance. Essentially, there needs to be some way to say 
 ```{r estimating socialability of a county}
 install.packages("ggmap")
 library(ggmap)
+
+distance_mat <- matrix(rep(NA, length(urban_counties) * length(rural_counties)), ncol = length(urban_counties))
+colnames(distance_mat) <- urban_counties
+rownames(distance_mat) <- rural_counties
+
+#was going to do this but I ran out of google searches 
+for(i in 1:length(urban_counties)){
+  for(j in 1:length(rural_counties)){
+    distance <- mapdist(from = urban_counties[i], to = rural_counties[j])
+    distance_mat[j,i] <- distance$km 
+  }
+}
 
 distance <- function(k, i){
   to <- county_vec[k]
@@ -301,8 +351,16 @@ for(i in 1:length(urban_counties)){
 
 ```
 
+### Preliminary Analysis 
 
+I exceeded the Google query limit using the ggmaps tool, so I have to stop on the distance work for now. Going to write out some hypotheses instead. 
 
+* If unvaccinated rural adults were acting as spreaders of the disease to urban areas, then the values when *i* is rural and when *k* is urban should be higher. How would this be quantifiably assessed? I think that a one-tailed t-test may be appropriate, but I'm unsure of whether I'm just fitting what I know to my data. The hypotheses from the t-test would be as follows:
+
+    + H~o~: $\mu ~rural to urban~$ = $\mu ~urban to rural~$
+    + H~A~: $\mu ~rural to urban~$ > $\mu ~urban to rural~$
+
+* While this isn't working, I'm going to go ahead and try to make prop.active_cases sensitive to age. 
 
 
 
